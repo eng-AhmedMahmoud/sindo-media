@@ -1628,23 +1628,23 @@ html[dir="ltr"] .scroll-top {
   }
 
   .whatsapp-btn {
-    bottom: 9rem;
+    bottom: 4rem;
     width: 60px;
     height: 60px;
   }
 
   html[dir="ltr"] .whatsapp-btn {
-    bottom: 9rem;
+    bottom: 4rem;
   }
 
   .scroll-top {
-    bottom: 9rem;
+    bottom: 4rem;
     width: 60px;
     height: 60px;
   }
 
   html[dir="ltr"] .scroll-top {
-    bottom: 9rem;
+    bottom: 4rem;
   }
 }
 
