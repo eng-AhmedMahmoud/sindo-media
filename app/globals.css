@@ -1557,8 +1557,8 @@ html[dir="ltr"] .whatsapp-btn {
   position: fixed;
   bottom: 2rem;
   right: 2rem;
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   background: var(--gradient-primary);
   color: white;
   border: none;
@@ -1628,19 +1628,23 @@ html[dir="ltr"] .scroll-top {
   }
 
   .whatsapp-btn {
-    bottom: 7.5rem;
+    bottom: 9rem;
+    width: 60px;
+    height: 60px;
   }
 
   html[dir="ltr"] .whatsapp-btn {
-    bottom: 7.5rem;
+    bottom: 9rem;
   }
 
   .scroll-top {
-    bottom: 7.5rem;
+    bottom: 9rem;
+    width: 60px;
+    height: 60px;
   }
 
   html[dir="ltr"] .scroll-top {
-    bottom: 7.5rem;
+    bottom: 9rem;
   }
 }
 
