@@ -991,11 +991,16 @@ input, textarea, .form-input {
   }
 
   .hero-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
   }
 
   .stat-number {
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-xl);
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
   }
 }
 
@@ -1627,6 +1632,14 @@ html[dir="ltr"] .scroll-top {
   }
 
   html[dir="ltr"] .whatsapp-btn {
+    bottom: 6rem;
+  }
+
+  .scroll-top {
+    bottom: 6rem;
+  }
+
+  html[dir="ltr"] .scroll-top {
     bottom: 6rem;
   }
 }
