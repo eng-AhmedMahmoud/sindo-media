@@ -11,7 +11,7 @@ const translations = {
     title: 'اتصل بنا',
     description: 'دعنا نناقش كيف يمكننا مساعدة عملك على النمو',
     address: 'العنوان',
-    addressText: '123 شارع التسويق، الحي التجاري',
+    addressText: 'الرياض - حي القدس',
     phone: 'الهاتف',
     email: 'البريد الإلكتروني',
     name: 'اسمك',
@@ -19,13 +19,14 @@ const translations = {
     project: 'طلب المشروع',
     send: 'إرسال الرسالة',
     success: 'تم إرسال رسالتك بنجاح!',
-    error: 'حدث خطأ. يرجى المحاولة مرة أخرى.'
+    error: 'حدث خطأ. يرجى المحاولة مرة أخرى.',
+    trustedPartners: 'شركاء موثوقون'
   },
   en: {
     title: 'Contact Us',
     description: "Let's discuss how we can help grow your business",
     address: 'Address',
-    addressText: '123 Marketing Street, Business District',
+    addressText: 'Ar Riyadh - Alquds Neighborhood',
     phone: 'Phone',
     email: 'Email',
     name: 'Your Name',
@@ -33,7 +34,8 @@ const translations = {
     project: 'Project Request',
     send: 'Send Message',
     success: 'Your message has been sent successfully!',
-    error: 'An error occurred. Please try again.'
+    error: 'An error occurred. Please try again.',
+    trustedPartners: 'Trusted Partners'
   }
 }
 
@@ -106,6 +108,33 @@ export default function Contact({ language }: ContactProps) {
               <a href="#" className="social-icon" aria-label="LinkedIn">
                 <i className="fab fa-linkedin"></i>
               </a>
+            </div>
+
+            <div className="partner-badges">
+              <p className="partner-title">{t.trustedPartners}</p>
+              <div className="partner-logos">
+                <div className="partner-badge google-partner">
+                  <div className="partner-badge-premier">PREMIER</div>
+                  <div className="partner-badge-content">
+                    <span className="google-text">
+                      <span style={{color: '#4285F4'}}>G</span>
+                      <span style={{color: '#EA4335'}}>o</span>
+                      <span style={{color: '#FBBC05'}}>o</span>
+                      <span style={{color: '#4285F4'}}>g</span>
+                      <span style={{color: '#34A853'}}>l</span>
+                      <span style={{color: '#EA4335'}}>e</span>
+                    </span>
+                    <span className="partner-text">Partner</span>
+                  </div>
+                </div>
+                <div className="partner-badge facebook-partner">
+                  <i className="fab fa-facebook-square"></i>
+                  <div className="partner-badge-text">
+                    <span>Marketing</span>
+                    <span>Partner</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

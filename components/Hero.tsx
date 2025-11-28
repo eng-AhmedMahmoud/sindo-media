@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface HeroProps {
   language: 'ar' | 'en'
@@ -15,7 +15,11 @@ const translations = {
     ourServices: 'خدماتنا',
     happyClients: 'عميل سعيد',
     projectsDone: 'مشروع منجز',
-    yearsExperience: 'سنة خبرة'
+    yearsExperience: 'سنة خبرة',
+    playVideo: 'تشغيل الفيديو',
+    pauseVideo: 'إيقاف الفيديو',
+    playMusic: 'تشغيل الموسيقى',
+    pauseMusic: 'إيقاف الموسيقى'
   },
   en: {
     title1: 'Transform Your Brand',
@@ -25,13 +29,45 @@ const translations = {
     ourServices: 'Our Services',
     happyClients: 'Happy Clients',
     projectsDone: 'Projects Done',
-    yearsExperience: 'Years Experience'
+    yearsExperience: 'Years Experience',
+    playVideo: 'Play Video',
+    pauseVideo: 'Pause Video',
+    playMusic: 'Play Music',
+    pauseMusic: 'Pause Music'
   }
 }
 
 export default function Hero({ language }: HeroProps) {
   const t = translations[language]
   const statsRef = useRef<HTMLDivElement>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false)
+  const [isVideoPlaying, setIsVideoPlaying] = useState(true)
+
+  const toggleMusic = () => {
+    if (audioRef.current) {
+      if (isMusicPlaying) {
+        audioRef.current.pause()
+        setIsMusicPlaying(false)
+      } else {
+        audioRef.current.play()
+        setIsMusicPlaying(true)
+      }
+    }
+  }
+
+  const toggleVideo = () => {
+    if (videoRef.current) {
+      if (isVideoPlaying) {
+        videoRef.current.pause()
+        setIsVideoPlaying(false)
+      } else {
+        videoRef.current.play()
+        setIsVideoPlaying(true)
+      }
+    }
+  }
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -73,12 +109,41 @@ export default function Hero({ language }: HeroProps) {
 
   return (
     <section id="home" className="hero">
-      <div className="hero-bg">
-        <div className="hero-shapes">
-          <div className="shape shape-1"></div>
-          <div className="shape shape-2"></div>
-          <div className="shape shape-3"></div>
-        </div>
+      <div className="hero-video-bg">
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="hero-video"
+        >
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
+        <div className="hero-video-overlay"></div>
+      </div>
+
+      <audio ref={audioRef} loop>
+        <source src="/hero-music.mp3" type="audio/mpeg" />
+      </audio>
+
+      <div className="music-controls">
+        <button
+          className={`music-btn ${isVideoPlaying ? 'active' : ''}`}
+          onClick={toggleVideo}
+          aria-label={isVideoPlaying ? t.pauseVideo : t.playVideo}
+          title={isVideoPlaying ? t.pauseVideo : t.playVideo}
+        >
+          <i className={`fas ${isVideoPlaying ? 'fa-pause' : 'fa-play'}`}></i>
+        </button>
+        <button
+          className={`music-btn ${isMusicPlaying ? 'active' : ''}`}
+          onClick={toggleMusic}
+          aria-label={isMusicPlaying ? t.pauseMusic : t.playMusic}
+          title={isMusicPlaying ? t.pauseMusic : t.playMusic}
+        >
+          <i className={`fas ${isMusicPlaying ? 'fa-volume-up' : 'fa-volume-mute'}`}></i>
+        </button>
       </div>
 
       <div className="container">

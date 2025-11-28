@@ -7,6 +7,7 @@ interface NavbarProps {
   language: 'ar' | 'en'
   onThemeToggle: () => void
   onLanguageToggle: () => void
+  onQuoteRequest: () => void
 }
 
 const translations = {
@@ -16,7 +17,8 @@ const translations = {
     clients: 'عملاؤنا',
     projects: 'مشاريعنا',
     team: 'فريقنا',
-    contact: 'اتصل بنا'
+    contact: 'اتصل بنا',
+    quote: 'طلب عرض سعر'
   },
   en: {
     home: 'Home',
@@ -24,11 +26,12 @@ const translations = {
     clients: 'Clients',
     projects: 'Projects',
     team: 'Team',
-    contact: 'Contact'
+    contact: 'Contact',
+    quote: 'Request Quote'
   }
 }
 
-export default function Navbar({ theme, language, onThemeToggle, onLanguageToggle }: NavbarProps) {
+export default function Navbar({ theme, language, onThemeToggle, onLanguageToggle, onQuoteRequest }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const t = translations[language]
@@ -41,6 +44,11 @@ export default function Navbar({ theme, language, onThemeToggle, onLanguageToggl
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  const handleQuoteClick = () => {
+    setIsMobileMenuOpen(false)
+    onQuoteRequest()
+  }
 
   return (
     <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
@@ -63,6 +71,10 @@ export default function Navbar({ theme, language, onThemeToggle, onLanguageToggl
           </div>
 
           <div className="nav-actions">
+            <button className="quote-action-btn" onClick={handleQuoteClick}>
+              <i className="fas fa-file-invoice"></i>
+              <span>{t.quote}</span>
+            </button>
             <button className="theme-toggle" onClick={onThemeToggle} aria-label="Toggle theme">
               <i className={`fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`}></i>
             </button>

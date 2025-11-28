@@ -12,21 +12,45 @@ import Footer from '@/components/Footer'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import ScrollToTop from '@/components/ScrollToTop'
 import LoadingScreen from '@/components/LoadingScreen'
+import QuoteModal from '@/components/QuoteModal'
 
 export default function Home() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [language, setLanguage] = useState<'ar' | 'en'>('ar')
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false)
 
   useEffect(() => {
-    // Set initial theme and language
-    document.documentElement.classList.add('dark-theme')
-    document.documentElement.setAttribute('data-lang', 'ar')
-    document.documentElement.setAttribute('dir', 'rtl')
+    // Load saved preferences from localStorage
+    const savedTheme = localStorage.getItem('sindo-theme') as 'dark' | 'light' | null
+    const savedLanguage = localStorage.getItem('sindo-language') as 'ar' | 'en' | null
+
+    const initialTheme = savedTheme || 'dark'
+    const initialLanguage = savedLanguage || 'ar'
+
+    setTheme(initialTheme)
+    setLanguage(initialLanguage)
+
+    // Apply initial theme
+    document.documentElement.classList.remove('dark-theme', 'light-theme')
+    document.documentElement.classList.add(`${initialTheme}-theme`)
+
+    // Apply initial language
+    document.documentElement.setAttribute('data-lang', initialLanguage)
+    document.documentElement.setAttribute('lang', initialLanguage)
+    document.documentElement.setAttribute('dir', initialLanguage === 'ar' ? 'rtl' : 'ltr')
+
+    // Auto-open quote modal after loading screen (3 seconds delay)
+    const timer = setTimeout(() => {
+      setIsQuoteModalOpen(true)
+    }, 3000)
+
+    return () => clearTimeout(timer)
   }, [])
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
     setTheme(newTheme)
+    localStorage.setItem('sindo-theme', newTheme)
     document.documentElement.classList.remove('dark-theme', 'light-theme')
     document.documentElement.classList.add(`${newTheme}-theme`)
   }
@@ -34,6 +58,7 @@ export default function Home() {
   const toggleLanguage = () => {
     const newLang = language === 'ar' ? 'en' : 'ar'
     setLanguage(newLang)
+    localStorage.setItem('sindo-language', newLang)
     document.documentElement.setAttribute('data-lang', newLang)
     document.documentElement.setAttribute('lang', newLang)
     document.documentElement.setAttribute('dir', newLang === 'ar' ? 'rtl' : 'ltr')
@@ -48,6 +73,7 @@ export default function Home() {
           language={language}
           onThemeToggle={toggleTheme}
           onLanguageToggle={toggleLanguage}
+          onQuoteRequest={() => setIsQuoteModalOpen(true)}
         />
         <Hero language={language} />
         <Services language={language} />
@@ -59,6 +85,11 @@ export default function Home() {
         <WhatsAppButton />
         <ScrollToTop />
       </main>
+      <QuoteModal
+        language={language}
+        isOpen={isQuoteModalOpen}
+        onClose={() => setIsQuoteModalOpen(false)}
+      />
     </>
   )
 }
