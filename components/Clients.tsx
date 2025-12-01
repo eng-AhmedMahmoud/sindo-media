@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 interface ClientsProps {
   language: 'ar' | 'en'
 }
@@ -16,12 +18,19 @@ const translations = {
 }
 
 const clients = [
-  { icon: 'fa-building', name: 'Client 1' },
-  { icon: 'fa-store', name: 'Client 2' },
-  { icon: 'fa-shopping-bag', name: 'Client 3' },
-  { icon: 'fa-utensils', name: 'Client 4' },
-  { icon: 'fa-heartbeat', name: 'Client 5' },
-  { icon: 'fa-graduation-cap', name: 'Client 6' }
+  { image: '/clients/client-1.jpg', name: 'Client 1' },
+  { image: '/clients/client-2.jpg', name: 'Client 2' },
+  { image: '/clients/client-3.jpg', name: 'Client 3' },
+  { image: '/clients/client-4.jpg', name: 'Client 4' },
+  { image: '/clients/client-5.jpg', name: 'Client 5' },
+  { image: '/clients/client-6.jpg', name: 'Client 6' },
+  { image: '/clients/client-7.jpg', name: 'Client 7' },
+  { image: '/clients/client-8.jpg', name: 'Client 8' },
+  { image: '/clients/client-9.jpg', name: 'Client 9' },
+  { image: '/clients/client-10.jpg', name: 'Client 10' },
+  { image: '/clients/client-11.jpg', name: 'Client 11' },
+  { image: '/clients/client-12.jpg', name: 'Client 12' },
+  { image: '/clients/client-13.jpg', name: 'Client 13' },
 ]
 
 export default function Clients({ language }: ClientsProps) {
@@ -43,8 +52,12 @@ export default function Clients({ language }: ClientsProps) {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="logo-placeholder">
-                <i className={`fas ${client.icon}`}></i>
-                <span>{client.name}</span>
+                <Image
+                  src={client.image}
+                  alt={client.name}
+                  fill
+                  style={{ objectFit: 'contain' }}
+                />
               </div>
             </div>
           ))}

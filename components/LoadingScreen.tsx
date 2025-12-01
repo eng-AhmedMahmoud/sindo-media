@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 export default function LoadingScreen() {
   const [isLoading, setIsLoading] = useState(true)
@@ -39,7 +40,14 @@ export default function LoadingScreen() {
         <div className="loading-logo">
           <div className="logo-circle">
             <div className="logo-inner">
-              <span className="logo-letter">S</span>
+              <Image
+                src="/logo-mobile-dark.png"
+                alt="Sindo Media"
+                width={60}
+                height={60}
+                className="loading-logo-img"
+                priority
+              />
             </div>
           </div>
           <div className="loading-spinner"></div>

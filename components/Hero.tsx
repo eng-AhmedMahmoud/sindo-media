@@ -43,7 +43,6 @@ export default function Hero({ language }: HeroProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
-  const [isVideoPlaying, setIsVideoPlaying] = useState(true)
 
   const toggleMusic = () => {
     if (audioRef.current) {
@@ -53,18 +52,6 @@ export default function Hero({ language }: HeroProps) {
       } else {
         audioRef.current.play()
         setIsMusicPlaying(true)
-      }
-    }
-  }
-
-  const toggleVideo = () => {
-    if (videoRef.current) {
-      if (isVideoPlaying) {
-        videoRef.current.pause()
-        setIsVideoPlaying(false)
-      } else {
-        videoRef.current.play()
-        setIsVideoPlaying(true)
       }
     }
   }
@@ -98,10 +85,10 @@ export default function Hero({ language }: HeroProps) {
       const timer = setInterval(() => {
         current += increment
         if (current >= target) {
-          stat.textContent = target.toString()
+          stat.textContent = '+' + target.toString()
           clearInterval(timer)
         } else {
-          stat.textContent = Math.floor(current).toString()
+          stat.textContent = '+' + Math.floor(current).toString()
         }
       }, 30)
     })
@@ -128,14 +115,6 @@ export default function Hero({ language }: HeroProps) {
       </audio>
 
       <div className="music-controls">
-        <button
-          className={`music-btn ${isVideoPlaying ? 'active' : ''}`}
-          onClick={toggleVideo}
-          aria-label={isVideoPlaying ? t.pauseVideo : t.playVideo}
-          title={isVideoPlaying ? t.pauseVideo : t.playVideo}
-        >
-          <i className={`fas ${isVideoPlaying ? 'fa-pause' : 'fa-play'}`}></i>
-        </button>
         <button
           className={`music-btn ${isMusicPlaying ? 'active' : ''}`}
           onClick={toggleMusic}
@@ -164,15 +143,15 @@ export default function Hero({ language }: HeroProps) {
           </div>
           <div className="hero-stats" ref={statsRef}>
             <div className="stat">
-              <h3 className="stat-number" data-count="500">0</h3>
+              <h3 className="stat-number" data-count="450">+0</h3>
               <p className="stat-label">{t.happyClients}</p>
             </div>
             <div className="stat">
-              <h3 className="stat-number" data-count="1200">0</h3>
+              <h3 className="stat-number" data-count="650">+0</h3>
               <p className="stat-label">{t.projectsDone}</p>
             </div>
             <div className="stat">
-              <h3 className="stat-number" data-count="15">0</h3>
+              <h3 className="stat-number" data-count="10">+0</h3>
               <p className="stat-label">{t.yearsExperience}</p>
             </div>
           </div>

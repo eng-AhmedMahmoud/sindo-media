@@ -81,7 +81,7 @@ export default function Home() {
         <Projects language={language} />
         <Team language={language} />
         <Contact language={language} />
-        <Footer language={language} />
+        <Footer language={language} theme={theme} />
         <WhatsAppButton />
         <ScrollToTop />
       </main>

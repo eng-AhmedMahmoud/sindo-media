@@ -60,10 +60,13 @@ export default function QuoteModal({ language, isOpen, onClose }: QuoteModalProp
   const [formData, setFormData] = useState({
     fullName: '',
     phoneNumber: '',
+    countryCode: '+966',
     companyName: '',
     service: '',
     requirement: ''
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   useEffect(() => {
     if (isOpen) {
@@ -79,12 +82,42 @@ export default function QuoteModal({ language, isOpen, onClose }: QuoteModalProp
     }
   }, [isOpen])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission here
-    console.log('Form submitted:', formData)
-    // You can add your form submission logic here
-    onClose()
+    setIsSubmitting(true)
+    setSubmitStatus('idle')
+
+    try {
+      const response = await fetch('/api/quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        setSubmitStatus('success')
+        setFormData({
+          fullName: '',
+          phoneNumber: '',
+          countryCode: '+966',
+          companyName: '',
+          service: '',
+          requirement: ''
+        })
+        setTimeout(() => {
+          onClose()
+          setSubmitStatus('idle')
+        }, 2000)
+      } else {
+        setSubmitStatus('error')
+      }
+    } catch {
+      setSubmitStatus('error')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -125,9 +158,14 @@ export default function QuoteModal({ language, isOpen, onClose }: QuoteModalProp
           <div className="quote-form-group">
             <label className="quote-form-label-orange">{t.phoneLabel}</label>
             <div className="quote-phone-input-wrapper">
-              <select className="quote-country-code" defaultValue="+20">
-                <option value="+20">🇪🇬 +20</option>
+              <select
+                name="countryCode"
+                className="quote-country-code"
+                value={formData.countryCode}
+                onChange={handleChange}
+              >
                 <option value="+966">🇸🇦 +966</option>
+                <option value="+20">🇪🇬 +20</option>
                 <option value="+971">🇦🇪 +971</option>
                 <option value="+965">🇰🇼 +965</option>
                 <option value="+974">🇶🇦 +974</option>
@@ -189,8 +227,20 @@ export default function QuoteModal({ language, isOpen, onClose }: QuoteModalProp
             ></textarea>
           </div>
 
-          <button type="submit" className="quote-submit-btn">
-            {t.send}
+          <button
+            type="submit"
+            className={`quote-submit-btn ${submitStatus === 'success' ? 'success' : ''} ${submitStatus === 'error' ? 'error' : ''}`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <><i className="fas fa-spinner fa-spin"></i> {language === 'ar' ? 'جاري الإرسال...' : 'Sending...'}</>
+            ) : submitStatus === 'success' ? (
+              <><i className="fas fa-check"></i> {language === 'ar' ? 'تم الإرسال بنجاح!' : 'Sent Successfully!'}</>
+            ) : submitStatus === 'error' ? (
+              <><i className="fas fa-exclamation-triangle"></i> {language === 'ar' ? 'حدث خطأ' : 'Error'}</>
+            ) : (
+              t.send
+            )}
           </button>
         </form>
       </div>

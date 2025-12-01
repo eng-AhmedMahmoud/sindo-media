@@ -18,6 +18,7 @@ const translations = {
     emailLabel: 'بريدك الإلكتروني',
     project: 'طلب المشروع',
     send: 'إرسال الرسالة',
+    sending: 'جاري الإرسال...',
     success: 'تم إرسال رسالتك بنجاح!',
     error: 'حدث خطأ. يرجى المحاولة مرة أخرى.',
     trustedPartners: 'شركاء موثوقون'
@@ -33,6 +34,7 @@ const translations = {
     emailLabel: 'Your Email',
     project: 'Project Request',
     send: 'Send Message',
+    sending: 'Sending...',
     success: 'Your message has been sent successfully!',
     error: 'An error occurred. Please try again.',
     trustedPartners: 'Trusted Partners'
@@ -43,16 +45,33 @@ export default function Contact({ language }: ContactProps) {
   const t = translations[language]
   const [formState, setFormState] = useState({ name: '', email: '', project: '' })
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true)
 
-    // Simulate form submission
-    setTimeout(() => {
-      setMessage({ type: 'success', text: t.success })
-      setFormState({ name: '', email: '', project: '' })
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formState),
+      })
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: t.success })
+        setFormState({ name: '', email: '', project: '' })
+      } else {
+        setMessage({ type: 'error', text: t.error })
+      }
+    } catch {
+      setMessage({ type: 'error', text: t.error })
+    } finally {
+      setIsSubmitting(false)
       setTimeout(() => setMessage(null), 5000)
-    }, 1000)
+    }
   }
 
   return (
@@ -96,44 +115,25 @@ export default function Contact({ language }: ContactProps) {
             </div>
 
             <div className="contact-social">
-              <a href="#" className="social-icon" aria-label="Facebook">
+              <a href="https://www.facebook.com/profile.php?id=61583397677984" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Facebook">
                 <i className="fab fa-facebook"></i>
               </a>
-              <a href="#" className="social-icon" aria-label="Twitter">
-                <i className="fab fa-twitter"></i>
-              </a>
-              <a href="#" className="social-icon" aria-label="Instagram">
+              <a href="https://www.instagram.com/media_sindo70/" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Instagram">
                 <i className="fab fa-instagram"></i>
               </a>
-              <a href="#" className="social-icon" aria-label="LinkedIn">
-                <i className="fab fa-linkedin"></i>
+              <a href="https://www.tiktok.com/@sindomediaagency" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="TikTok">
+                <i className="fab fa-tiktok"></i>
               </a>
             </div>
 
             <div className="partner-badges">
               <p className="partner-title">{t.trustedPartners}</p>
               <div className="partner-logos">
-                <div className="partner-badge google-partner">
-                  <div className="partner-badge-premier">PREMIER</div>
-                  <div className="partner-badge-content">
-                    <span className="google-text">
-                      <span style={{color: '#4285F4'}}>G</span>
-                      <span style={{color: '#EA4335'}}>o</span>
-                      <span style={{color: '#FBBC05'}}>o</span>
-                      <span style={{color: '#4285F4'}}>g</span>
-                      <span style={{color: '#34A853'}}>l</span>
-                      <span style={{color: '#EA4335'}}>e</span>
-                    </span>
-                    <span className="partner-text">Partner</span>
-                  </div>
-                </div>
-                <div className="partner-badge facebook-partner">
-                  <i className="fab fa-facebook-square"></i>
-                  <div className="partner-badge-text">
-                    <span>Marketing</span>
-                    <span>Partner</span>
-                  </div>
-                </div>
+                <img
+                  src="/partners-badge.png"
+                  alt="Google Premier Partner & Facebook Marketing Partner"
+                  className="partners-image"
+                />
               </div>
             </div>
           </div>
@@ -181,9 +181,9 @@ export default function Contact({ language }: ContactProps) {
               <label className="form-label">{t.project}</label>
             </div>
 
-            <button type="submit" className="btn btn-primary btn-block">
-              <span>{t.send}</span>
-              <i className="fas fa-paper-plane"></i>
+            <button type="submit" className="btn btn-primary btn-block" disabled={isSubmitting}>
+              <span>{isSubmitting ? t.sending : t.send}</span>
+              <i className={`fas ${isSubmitting ? 'fa-spinner fa-spin' : 'fa-paper-plane'}`}></i>
             </button>
           </form>
         </div>
