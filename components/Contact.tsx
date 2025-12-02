@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react'
 
 interface ContactProps {
   language: 'ar' | 'en'
+  addToast: (type: 'success' | 'error', message: string) => void
 }
 
 const translations = {
@@ -41,10 +42,9 @@ const translations = {
   }
 }
 
-export default function Contact({ language }: ContactProps) {
+export default function Contact({ language, addToast }: ContactProps) {
   const t = translations[language]
   const [formState, setFormState] = useState({ name: '', email: '', project: '' })
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: FormEvent) => {
@@ -61,16 +61,15 @@ export default function Contact({ language }: ContactProps) {
       })
 
       if (response.ok) {
-        setMessage({ type: 'success', text: t.success })
+        addToast('success', t.success)
         setFormState({ name: '', email: '', project: '' })
       } else {
-        setMessage({ type: 'error', text: t.error })
+        addToast('error', t.error)
       }
     } catch {
-      setMessage({ type: 'error', text: t.error })
+      addToast('error', t.error)
     } finally {
       setIsSubmitting(false)
-      setTimeout(() => setMessage(null), 5000)
     }
   }
 
@@ -139,12 +138,6 @@ export default function Contact({ language }: ContactProps) {
           </div>
 
           <form className="contact-form" onSubmit={handleSubmit}>
-            {message && (
-              <div className={`form-message ${message.type}`}>
-                {message.text}
-              </div>
-            )}
-
             <div className="form-group">
               <input
                 type="text"

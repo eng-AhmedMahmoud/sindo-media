@@ -13,11 +13,13 @@ import WhatsAppButton from '@/components/WhatsAppButton'
 import ScrollToTop from '@/components/ScrollToTop'
 import LoadingScreen from '@/components/LoadingScreen'
 import QuoteModal from '@/components/QuoteModal'
+import Toast, { useToast } from '@/components/Toast'
 
 export default function Home() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [language, setLanguage] = useState<'ar' | 'en'>('ar')
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false)
+  const { toasts, addToast, removeToast } = useToast()
 
   useEffect(() => {
     // Load saved preferences from localStorage
@@ -80,7 +82,7 @@ export default function Home() {
         <Clients language={language} />
         <Projects language={language} />
         <Team language={language} />
-        <Contact language={language} />
+        <Contact language={language} addToast={addToast} />
         <Footer language={language} theme={theme} />
         <WhatsAppButton />
         <ScrollToTop />
@@ -89,7 +91,9 @@ export default function Home() {
         language={language}
         isOpen={isQuoteModalOpen}
         onClose={() => setIsQuoteModalOpen(false)}
+        addToast={addToast}
       />
+      <Toast toasts={toasts} removeToast={removeToast} />
     </>
   )
 }

@@ -6,6 +6,7 @@ interface QuoteModalProps {
   language: 'ar' | 'en'
   isOpen: boolean
   onClose: () => void
+  addToast: (type: 'success' | 'error', message: string) => void
 }
 
 const translations = {
@@ -55,7 +56,7 @@ const translations = {
   }
 }
 
-export default function QuoteModal({ language, isOpen, onClose }: QuoteModalProps) {
+export default function QuoteModal({ language, isOpen, onClose, addToast }: QuoteModalProps) {
   const t = translations[language]
   const [formData, setFormData] = useState({
     fullName: '',
@@ -66,7 +67,6 @@ export default function QuoteModal({ language, isOpen, onClose }: QuoteModalProp
     requirement: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   useEffect(() => {
     if (isOpen) {
@@ -85,7 +85,6 @@ export default function QuoteModal({ language, isOpen, onClose }: QuoteModalProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    setSubmitStatus('idle')
 
     try {
       const response = await fetch('/api/quote', {
@@ -97,7 +96,7 @@ export default function QuoteModal({ language, isOpen, onClose }: QuoteModalProp
       })
 
       if (response.ok) {
-        setSubmitStatus('success')
+        addToast('success', language === 'ar' ? 'تم إرسال طلبك بنجاح!' : 'Your request has been sent successfully!')
         setFormData({
           fullName: '',
           phoneNumber: '',
@@ -106,15 +105,12 @@ export default function QuoteModal({ language, isOpen, onClose }: QuoteModalProp
           service: '',
           requirement: ''
         })
-        setTimeout(() => {
-          onClose()
-          setSubmitStatus('idle')
-        }, 2000)
+        onClose()
       } else {
-        setSubmitStatus('error')
+        addToast('error', language === 'ar' ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'An error occurred. Please try again.')
       }
     } catch {
-      setSubmitStatus('error')
+      addToast('error', language === 'ar' ? 'حدث خطأ. يرجى المحاولة مرة أخرى.' : 'An error occurred. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -229,15 +225,11 @@ export default function QuoteModal({ language, isOpen, onClose }: QuoteModalProp
 
           <button
             type="submit"
-            className={`quote-submit-btn ${submitStatus === 'success' ? 'success' : ''} ${submitStatus === 'error' ? 'error' : ''}`}
+            className="quote-submit-btn"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
               <><i className="fas fa-spinner fa-spin"></i> {language === 'ar' ? 'جاري الإرسال...' : 'Sending...'}</>
-            ) : submitStatus === 'success' ? (
-              <><i className="fas fa-check"></i> {language === 'ar' ? 'تم الإرسال بنجاح!' : 'Sent Successfully!'}</>
-            ) : submitStatus === 'error' ? (
-              <><i className="fas fa-exclamation-triangle"></i> {language === 'ar' ? 'حدث خطأ' : 'Error'}</>
             ) : (
               t.send
             )}
