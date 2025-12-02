@@ -2784,11 +2784,11 @@ html[dir="rtl"] .certificate-preview-close {
 /* ===== TOAST NOTIFICATIONS ===== */
 .toast-container {
   position: fixed;
-  top: var(--spacing-md);
+  bottom: var(--spacing-md);
   right: var(--spacing-md);
   z-index: 10000;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: var(--spacing-sm);
   pointer-events: none;
 }
@@ -2930,8 +2930,6 @@ html[dir="rtl"] .toast-exit {
 
 @media (max-width: 480px) {
   .toast-container {
-    top: auto;
-    bottom: var(--spacing-md);
     right: var(--spacing-sm);
     left: var(--spacing-sm);
   }
