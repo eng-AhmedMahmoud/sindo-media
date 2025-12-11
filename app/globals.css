@@ -1581,20 +1581,11 @@ html.light-theme .clients-scroll-container::after {
   gap: var(--spacing-xl);
   width: fit-content;
   align-items: center;
-  animation: scroll-infinite 90s linear infinite;
+  will-change: transform;
 }
 
 .clients-scroll-track.paused {
   animation-play-state: paused;
-}
-
-@keyframes scroll-infinite {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(calc(-100% / 3));
-  }
 }
 
 .client-logo {

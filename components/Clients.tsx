@@ -41,41 +41,94 @@ export default function Clients({ language }: ClientsProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const [isPaused, setIsPaused] = useState(false)
-  const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [currentOffset, setCurrentOffset] = useState(0)
+  const isRTL = language === 'ar'
 
   const scrollToNext = () => {
     const track = trackRef.current
     if (!track) return
 
-    const logoWidth = 180 + 32 // logo width + gap
+    const logoWidth = 180 + 32
+
+    // Get current position
     const currentTransform = getComputedStyle(track).transform
     const matrix = new DOMMatrix(currentTransform)
     const currentX = matrix.m41
 
-    track.style.animation = 'none'
-    track.style.transform = `translateX(${currentX - logoWidth}px)`
+    // Calculate new position
+    const newX = currentX - logoWidth
 
+    // Temporarily pause auto-scroll
+    setIsPaused(true)
+
+    // Add smooth transition
+    track.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+    track.style.transform = `translateX(${newX}px)`
+
+    // Resume auto-scroll after transition
     setTimeout(() => {
-      track.style.animation = ''
-    }, 10)
+      track.style.transition = ''
+      setIsPaused(false)
+    }, 500)
   }
 
   const scrollToPrev = () => {
     const track = trackRef.current
     if (!track) return
 
-    const logoWidth = 180 + 32 // logo width + gap
+    const logoWidth = 180 + 32
+
+    // Get current position
     const currentTransform = getComputedStyle(track).transform
     const matrix = new DOMMatrix(currentTransform)
     const currentX = matrix.m41
 
-    track.style.animation = 'none'
-    track.style.transform = `translateX(${currentX + logoWidth}px)`
+    // Calculate new position
+    const newX = currentX + logoWidth
 
+    // Temporarily pause auto-scroll
+    setIsPaused(true)
+
+    // Add smooth transition
+    track.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+    track.style.transform = `translateX(${newX}px)`
+
+    // Resume auto-scroll after transition
     setTimeout(() => {
-      track.style.animation = ''
-    }, 10)
+      track.style.transition = ''
+      setIsPaused(false)
+    }, 500)
   }
+
+  // Auto-scroll functionality
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+
+    const logoWidth = 180 + 32 // logo width + gap
+    const totalLogos = clients.length
+    const setWidth = totalLogos * logoWidth
+
+    let position = -setWidth // Start from middle set
+    track.style.transform = `translateX(${position}px)`
+
+    const scroll = () => {
+      if (isPaused) return
+
+      position -= 0.5 // Scroll speed (pixels per frame)
+
+      // Reset to middle set when we've scrolled through one complete set
+      if (position <= -setWidth * 2) {
+        position = -setWidth
+      }
+
+      track.style.transform = `translateX(${position}px)`
+    }
+
+    const intervalId = setInterval(scroll, 16) // ~60fps
+
+    return () => clearInterval(intervalId)
+  }, [isPaused])
 
   useEffect(() => {
     const container = containerRef.current
@@ -125,8 +178,8 @@ export default function Clients({ language }: ClientsProps) {
         <div className="clients-carousel-wrapper">
           <button
             className="carousel-nav carousel-nav-left"
-            onClick={scrollToPrev}
-            aria-label="Previous client"
+            onClick={isRTL ? scrollToNext : scrollToPrev}
+            aria-label={isRTL ? "التالي" : "Previous client"}
           >
             <i className="fas fa-chevron-left"></i>
           </button>
@@ -161,8 +214,8 @@ export default function Clients({ language }: ClientsProps) {
 
           <button
             className="carousel-nav carousel-nav-right"
-            onClick={scrollToNext}
-            aria-label="Next client"
+            onClick={isRTL ? scrollToPrev : scrollToNext}
+            aria-label={isRTL ? "السابق" : "Next client"}
           >
             <i className="fas fa-chevron-right"></i>
           </button>
