@@ -42,7 +42,7 @@ export default function Clients({ language }: ClientsProps) {
   const trackRef = useRef<HTMLDivElement>(null)
   const isPausedRef = useRef(false)
   const positionRef = useRef(0)
-  const animationFrameRef = useRef<number>()
+  const animationFrameRef = useRef<number | undefined>(undefined)
   const isRTL = language === 'ar'
 
   const scrollToNext = () => {
