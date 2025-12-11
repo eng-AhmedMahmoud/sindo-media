@@ -35,6 +35,10 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: 'Sindo Media - سيندو ميديا | Marketing Agency',
   description: 'Transform your brand into digital success with innovative marketing solutions',
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
 }
 
 export default function RootLayout({
