@@ -40,8 +40,9 @@ export default function Clients({ language }: ClientsProps) {
   const t = translations[language]
   const containerRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
-  const [isPaused, setIsPaused] = useState(false)
-  const [currentOffset, setCurrentOffset] = useState(0)
+  const isPausedRef = useRef(false)
+  const positionRef = useRef(0)
+  const animationFrameRef = useRef<number>()
   const isRTL = language === 'ar'
 
   const scrollToNext = () => {
@@ -49,26 +50,20 @@ export default function Clients({ language }: ClientsProps) {
     if (!track) return
 
     const logoWidth = 180 + 32
+    const newX = positionRef.current - logoWidth
 
-    // Get current position
-    const currentTransform = getComputedStyle(track).transform
-    const matrix = new DOMMatrix(currentTransform)
-    const currentX = matrix.m41
-
-    // Calculate new position
-    const newX = currentX - logoWidth
-
-    // Temporarily pause auto-scroll
-    setIsPaused(true)
+    // Pause auto-scroll
+    isPausedRef.current = true
 
     // Add smooth transition
     track.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
     track.style.transform = `translateX(${newX}px)`
+    positionRef.current = newX
 
     // Resume auto-scroll after transition
     setTimeout(() => {
-      track.style.transition = ''
-      setIsPaused(false)
+      if (track) track.style.transition = ''
+      isPausedRef.current = false
     }, 500)
   }
 
@@ -77,26 +72,20 @@ export default function Clients({ language }: ClientsProps) {
     if (!track) return
 
     const logoWidth = 180 + 32
+    const newX = positionRef.current + logoWidth
 
-    // Get current position
-    const currentTransform = getComputedStyle(track).transform
-    const matrix = new DOMMatrix(currentTransform)
-    const currentX = matrix.m41
-
-    // Calculate new position
-    const newX = currentX + logoWidth
-
-    // Temporarily pause auto-scroll
-    setIsPaused(true)
+    // Pause auto-scroll
+    isPausedRef.current = true
 
     // Add smooth transition
     track.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
     track.style.transform = `translateX(${newX}px)`
+    positionRef.current = newX
 
     // Resume auto-scroll after transition
     setTimeout(() => {
-      track.style.transition = ''
-      setIsPaused(false)
+      if (track) track.style.transition = ''
+      isPausedRef.current = false
     }, 500)
   }
 
@@ -110,34 +99,41 @@ export default function Clients({ language }: ClientsProps) {
     const setWidth = totalLogos * logoWidth
     const scrollSpeed = isRTL ? 0.5 : -0.5 // Reverse direction for RTL
 
-    let position = -setWidth // Start from middle set
-    track.style.transform = `translateX(${position}px)`
+    // Set initial position
+    positionRef.current = -setWidth
+    track.style.transform = `translateX(${positionRef.current}px)`
 
     const scroll = () => {
-      if (isPaused) return
+      if (isPausedRef.current) {
+        animationFrameRef.current = requestAnimationFrame(scroll)
+        return
+      }
 
-      position += scrollSpeed
+      positionRef.current += scrollSpeed
 
       // Reset to middle set when we've scrolled through one complete set
       if (isRTL) {
-        // For RTL: scrolling right (positive), reset when reaching start
-        if (position >= 0) {
-          position = -setWidth
+        if (positionRef.current >= 0) {
+          positionRef.current = -setWidth
         }
       } else {
-        // For LTR: scrolling left (negative), reset when reaching end
-        if (position <= -setWidth * 2) {
-          position = -setWidth
+        if (positionRef.current <= -setWidth * 2) {
+          positionRef.current = -setWidth
         }
       }
 
-      track.style.transform = `translateX(${position}px)`
+      track.style.transform = `translateX(${positionRef.current}px)`
+      animationFrameRef.current = requestAnimationFrame(scroll)
     }
 
-    const intervalId = setInterval(scroll, 16) // ~60fps
+    animationFrameRef.current = requestAnimationFrame(scroll)
 
-    return () => clearInterval(intervalId)
-  }, [isPaused, isRTL])
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
+  }, [isRTL])
 
   useEffect(() => {
     const container = containerRef.current
@@ -196,10 +192,10 @@ export default function Clients({ language }: ClientsProps) {
           <div
             className="clients-scroll-container"
             ref={containerRef}
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
+            onMouseEnter={() => { isPausedRef.current = true }}
+            onMouseLeave={() => { isPausedRef.current = false }}
           >
-            <div className={`clients-scroll-track ${isPaused ? 'paused' : ''}`} ref={trackRef}>
+            <div className="clients-scroll-track" ref={trackRef}>
               {/* Triple the logos for seamless infinite loop */}
               {[...Array(3)].map((_, setIndex) => (
                 clients.map((client, index) => (
