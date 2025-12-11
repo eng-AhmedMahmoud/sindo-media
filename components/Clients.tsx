@@ -49,8 +49,12 @@ export default function Clients({ language }: ClientsProps) {
     const track = trackRef.current
     if (!track) return
 
-    const logoWidth = 180 + 32
-    const newX = positionRef.current - logoWidth
+    const logoElements = track.querySelectorAll('.client-logo')
+    if (logoElements.length === 0) return
+
+    const firstLogo = logoElements[0] as HTMLElement
+    const totalWidth = firstLogo.offsetWidth + 32
+    const newX = positionRef.current - totalWidth
 
     // Pause auto-scroll
     isPausedRef.current = true
@@ -71,8 +75,12 @@ export default function Clients({ language }: ClientsProps) {
     const track = trackRef.current
     if (!track) return
 
-    const logoWidth = 180 + 32
-    const newX = positionRef.current + logoWidth
+    const logoElements = track.querySelectorAll('.client-logo')
+    if (logoElements.length === 0) return
+
+    const firstLogo = logoElements[0] as HTMLElement
+    const totalWidth = firstLogo.offsetWidth + 32
+    const newX = positionRef.current + totalWidth
 
     // Pause auto-scroll
     isPausedRef.current = true
@@ -94,14 +102,30 @@ export default function Clients({ language }: ClientsProps) {
     const track = trackRef.current
     if (!track) return
 
-    const logoWidth = 180 + 32 // logo width + gap
-    const totalLogos = clients.length
-    const setWidth = totalLogos * logoWidth
-    const scrollSpeed = isRTL ? 0.5 : -0.5 // Reverse direction for RTL
+    // Calculate actual logo width from DOM
+    const logoElements = track.querySelectorAll('.client-logo')
+    if (logoElements.length === 0) return
 
-    // Set initial position
+    const firstLogo = logoElements[0] as HTMLElement
+    const logoWidth = firstLogo.offsetWidth
+    const gap = 32 // var(--spacing-xl)
+    const totalWidth = logoWidth + gap
+
+    const totalLogos = clients.length
+    const setWidth = totalLogos * totalWidth
+    const scrollSpeed = isRTL ? 1.5 : -1.5 // Increased speed, reverse for RTL
+
+    // Start from middle set to ensure logos are always visible
     positionRef.current = -setWidth
     track.style.transform = `translateX(${positionRef.current}px)`
+
+    console.log('Carousel initialized:', {
+      logoWidth,
+      totalLogos,
+      setWidth,
+      initialPosition: positionRef.current,
+      isRTL
+    })
 
     const scroll = () => {
       if (isPausedRef.current) {
