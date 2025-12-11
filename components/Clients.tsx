@@ -108,6 +108,7 @@ export default function Clients({ language }: ClientsProps) {
     const logoWidth = 180 + 32 // logo width + gap
     const totalLogos = clients.length
     const setWidth = totalLogos * logoWidth
+    const scrollSpeed = isRTL ? 0.5 : -0.5 // Reverse direction for RTL
 
     let position = -setWidth // Start from middle set
     track.style.transform = `translateX(${position}px)`
@@ -115,11 +116,19 @@ export default function Clients({ language }: ClientsProps) {
     const scroll = () => {
       if (isPaused) return
 
-      position -= 0.5 // Scroll speed (pixels per frame)
+      position += scrollSpeed
 
       // Reset to middle set when we've scrolled through one complete set
-      if (position <= -setWidth * 2) {
-        position = -setWidth
+      if (isRTL) {
+        // For RTL: scrolling right (positive), reset when reaching start
+        if (position >= 0) {
+          position = -setWidth
+        }
+      } else {
+        // For LTR: scrolling left (negative), reset when reaching end
+        if (position <= -setWidth * 2) {
+          position = -setWidth
+        }
       }
 
       track.style.transform = `translateX(${position}px)`
@@ -128,7 +137,7 @@ export default function Clients({ language }: ClientsProps) {
     const intervalId = setInterval(scroll, 16) // ~60fps
 
     return () => clearInterval(intervalId)
-  }, [isPaused])
+  }, [isPaused, isRTL])
 
   useEffect(() => {
     const container = containerRef.current
