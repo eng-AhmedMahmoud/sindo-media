@@ -102,57 +102,84 @@ export default function Clients({ language }: ClientsProps) {
     const track = trackRef.current
     if (!track) return
 
-    // Calculate actual logo width from DOM
-    const logoElements = track.querySelectorAll('.client-logo')
-    if (logoElements.length === 0) return
+    // Wait for DOM to be fully ready
+    const initCarousel = () => {
+      const logoElements = track.querySelectorAll('.client-logo')
 
-    const firstLogo = logoElements[0] as HTMLElement
-    const logoWidth = firstLogo.offsetWidth
-    const gap = 32 // var(--spacing-xl)
-    const totalWidth = logoWidth + gap
-
-    const totalLogos = clients.length
-    const setWidth = totalLogos * totalWidth
-    const scrollSpeed = isRTL ? 1.5 : -1.5 // Increased speed, reverse for RTL
-
-    // Start from middle set to ensure logos are always visible
-    positionRef.current = -setWidth
-    track.style.transform = `translateX(${positionRef.current}px)`
-
-    console.log('Carousel initialized:', {
-      logoWidth,
-      totalLogos,
-      setWidth,
-      initialPosition: positionRef.current,
-      isRTL
-    })
-
-    const scroll = () => {
-      if (isPausedRef.current) {
-        animationFrameRef.current = requestAnimationFrame(scroll)
+      if (logoElements.length === 0) {
+        console.error('No logos found in carousel')
         return
       }
 
-      positionRef.current += scrollSpeed
+      const firstLogo = logoElements[0] as HTMLElement
+      const logoWidth = firstLogo.offsetWidth || 180 // Fallback to default
+      const gap = 32
+      const totalWidth = logoWidth + gap
 
-      // Reset to middle set when we've scrolled through one complete set
-      if (isRTL) {
-        if (positionRef.current >= 0) {
-          positionRef.current = -setWidth
+      const totalLogos = clients.length
+      const setWidth = totalLogos * totalWidth
+      const scrollSpeed = isRTL ? 1.5 : -1.5 // RTL: left-to-right, LTR: right-to-left
+
+      // RTL: loop between -2*setWidth and -setWidth to avoid empty space near 0
+      // LTR: loop between 0 and -setWidth
+      positionRef.current = isRTL ? -setWidth * 2 : 0
+      track.style.transform = `translateX(${positionRef.current}px)`
+
+      // Force track to have explicit width
+      const totalTrackWidth = logoElements.length * totalWidth
+      track.style.width = `${totalTrackWidth}px`
+
+      console.log('Carousel initialized:', {
+        logoWidth,
+        totalLogos,
+        setWidth,
+        totalWidth,
+        scrollSpeed,
+        initialPosition: positionRef.current,
+        totalTrackWidth,
+        isRTL,
+        logoElementsCount: logoElements.length
+      })
+
+      // Verify position is applied
+      const verifyTimeout = setTimeout(() => {
+        const computedTransform = getComputedStyle(track).transform
+        console.log('Transform after 500ms:', computedTransform, 'Expected position:', positionRef.current)
+      }, 500)
+
+      const scroll = () => {
+        if (isPausedRef.current) {
+          animationFrameRef.current = requestAnimationFrame(scroll)
+          return
         }
-      } else {
-        if (positionRef.current <= -setWidth * 2) {
-          positionRef.current = -setWidth
+
+        positionRef.current += scrollSpeed
+
+        // Seamless loop - never get close to 0 in RTL to avoid empty space
+        if (isRTL) {
+          // Scrolling right from -2*setWidth to -setWidth (showing Set3 → Set2)
+          if (positionRef.current >= -setWidth) {
+            positionRef.current = -setWidth * 2
+          }
+        } else {
+          // Scrolling left from 0 to -setWidth (showing Set1 → Set2)
+          if (positionRef.current <= -setWidth) {
+            positionRef.current = 0
+          }
         }
+
+        track.style.transform = `translateX(${positionRef.current}px)`
+        animationFrameRef.current = requestAnimationFrame(scroll)
       }
 
-      track.style.transform = `translateX(${positionRef.current}px)`
       animationFrameRef.current = requestAnimationFrame(scroll)
     }
 
-    animationFrameRef.current = requestAnimationFrame(scroll)
+    // Give DOM time to render
+    const timeout = setTimeout(initCarousel, 100)
 
     return () => {
+      clearTimeout(timeout)
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
       }
@@ -207,10 +234,10 @@ export default function Clients({ language }: ClientsProps) {
         <div className="clients-carousel-wrapper">
           <button
             className="carousel-nav carousel-nav-left"
-            onClick={isRTL ? scrollToNext : scrollToPrev}
-            aria-label={isRTL ? "التالي" : "Previous client"}
+            onClick={scrollToPrev}
+            aria-label={isRTL ? "السابق" : "Previous"}
           >
-            <i className="fas fa-chevron-left"></i>
+            <i className={`fas fa-chevron-${isRTL ? 'right' : 'left'}`}></i>
           </button>
 
           <div
@@ -218,8 +245,9 @@ export default function Clients({ language }: ClientsProps) {
             ref={containerRef}
             onMouseEnter={() => { isPausedRef.current = true }}
             onMouseLeave={() => { isPausedRef.current = false }}
+            style={{ direction: 'ltr' }}
           >
-            <div className="clients-scroll-track" ref={trackRef} style={{ direction: 'ltr' }}>
+            <div className="clients-scroll-track" ref={trackRef}>
               {/* Triple the logos for seamless infinite loop */}
               {[...Array(3)].map((_, setIndex) => (
                 clients.map((client, index) => (
@@ -243,10 +271,10 @@ export default function Clients({ language }: ClientsProps) {
 
           <button
             className="carousel-nav carousel-nav-right"
-            onClick={isRTL ? scrollToPrev : scrollToNext}
-            aria-label={isRTL ? "السابق" : "Next client"}
+            onClick={scrollToNext}
+            aria-label={isRTL ? "التالي" : "Next"}
           >
-            <i className="fas fa-chevron-right"></i>
+            <i className={`fas fa-chevron-${isRTL ? 'left' : 'right'}`}></i>
           </button>
         </div>
       </div>
