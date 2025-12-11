@@ -219,7 +219,7 @@ export default function Clients({ language }: ClientsProps) {
             onMouseEnter={() => { isPausedRef.current = true }}
             onMouseLeave={() => { isPausedRef.current = false }}
           >
-            <div className="clients-scroll-track" ref={trackRef}>
+            <div className="clients-scroll-track" ref={trackRef} style={{ direction: 'ltr' }}>
               {/* Triple the logos for seamless infinite loop */}
               {[...Array(3)].map((_, setIndex) => (
                 clients.map((client, index) => (
