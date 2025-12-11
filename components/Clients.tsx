@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface ClientsProps {
   language: 'ar' | 'en'
@@ -40,6 +40,42 @@ export default function Clients({ language }: ClientsProps) {
   const t = translations[language]
   const containerRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
+  const [isPaused, setIsPaused] = useState(false)
+  const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  const scrollToNext = () => {
+    const track = trackRef.current
+    if (!track) return
+
+    const logoWidth = 180 + 32 // logo width + gap
+    const currentTransform = getComputedStyle(track).transform
+    const matrix = new DOMMatrix(currentTransform)
+    const currentX = matrix.m41
+
+    track.style.animation = 'none'
+    track.style.transform = `translateX(${currentX - logoWidth}px)`
+
+    setTimeout(() => {
+      track.style.animation = ''
+    }, 10)
+  }
+
+  const scrollToPrev = () => {
+    const track = trackRef.current
+    if (!track) return
+
+    const logoWidth = 180 + 32 // logo width + gap
+    const currentTransform = getComputedStyle(track).transform
+    const matrix = new DOMMatrix(currentTransform)
+    const currentX = matrix.m41
+
+    track.style.animation = 'none'
+    track.style.transform = `translateX(${currentX + logoWidth}px)`
+
+    setTimeout(() => {
+      track.style.animation = ''
+    }, 10)
+  }
 
   useEffect(() => {
     const container = containerRef.current
@@ -56,7 +92,6 @@ export default function Clients({ language }: ClientsProps) {
         const logoCenter = logoRect.left + logoRect.width / 2
         const distance = Math.abs(containerCenter - logoCenter)
 
-        // Highlight logos within 150px of center
         if (distance < 150) {
           logo.classList.add('center-logo')
         } else {
@@ -65,7 +100,6 @@ export default function Clients({ language }: ClientsProps) {
       })
     }
 
-    // Update on animation frame for smooth transitions
     let animationFrameId: number
     const animate = () => {
       updateCenterLogo()
@@ -88,41 +122,50 @@ export default function Clients({ language }: ClientsProps) {
           <p className="section-description">{t.description}</p>
         </div>
 
-        <div className="clients-scroll-container" ref={containerRef}>
-          <div className="clients-scroll-track" ref={trackRef}>
-            {/* First set of logos */}
-            {clients.map((client, index) => (
-              <div
-                key={`client-1-${index}`}
-                className="client-logo"
-              >
-                <div className="logo-placeholder">
-                  <Image
-                    src={client.image}
-                    alt={client.name}
-                    fill
-                    style={{ objectFit: 'contain' }}
-                  />
-                </div>
-              </div>
-            ))}
-            {/* Duplicate set for seamless loop */}
-            {clients.map((client, index) => (
-              <div
-                key={`client-2-${index}`}
-                className="client-logo"
-              >
-                <div className="logo-placeholder">
-                  <Image
-                    src={client.image}
-                    alt={client.name}
-                    fill
-                    style={{ objectFit: 'contain' }}
-                  />
-                </div>
-              </div>
-            ))}
+        <div className="clients-carousel-wrapper">
+          <button
+            className="carousel-nav carousel-nav-left"
+            onClick={scrollToPrev}
+            aria-label="Previous client"
+          >
+            <i className="fas fa-chevron-left"></i>
+          </button>
+
+          <div
+            className="clients-scroll-container"
+            ref={containerRef}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            <div className={`clients-scroll-track ${isPaused ? 'paused' : ''}`} ref={trackRef}>
+              {/* Triple the logos for seamless infinite loop */}
+              {[...Array(3)].map((_, setIndex) => (
+                clients.map((client, index) => (
+                  <div
+                    key={`client-${setIndex}-${index}`}
+                    className="client-logo"
+                  >
+                    <div className="logo-placeholder">
+                      <Image
+                        src={client.image}
+                        alt={client.name}
+                        fill
+                        style={{ objectFit: 'contain' }}
+                      />
+                    </div>
+                  </div>
+                ))
+              ))}
+            </div>
           </div>
+
+          <button
+            className="carousel-nav carousel-nav-right"
+            onClick={scrollToNext}
+            aria-label="Next client"
+          >
+            <i className="fas fa-chevron-right"></i>
+          </button>
         </div>
       </div>
     </section>

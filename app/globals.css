@@ -1481,14 +1481,53 @@ section {
 }
 
 /* ===== CLIENTS SECTION ===== */
-.clients-scroll-container {
+.clients-carousel-wrapper {
   margin-top: var(--spacing-lg);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.carousel-nav {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--bg-card);
+  border: 2px solid var(--border-color);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  z-index: 10;
+}
+
+.carousel-nav:hover {
+  background-color: var(--primary-green);
+  border-color: var(--primary-green);
+  color: white;
+  transform: scale(1.1);
+}
+
+.carousel-nav:active {
+  transform: scale(0.95);
+}
+
+.carousel-nav i {
+  font-size: 1.2rem;
+}
+
+.clients-scroll-container {
   position: relative;
   overflow: hidden;
   padding: var(--spacing-xl) 0;
-  max-width: 1000px;
-  margin-left: auto;
-  margin-right: auto;
+  flex: 1;
 }
 
 /* Strong fade effect on left and right edges to dim side logos */
@@ -1540,12 +1579,12 @@ html.light-theme .clients-scroll-container::after {
 .clients-scroll-track {
   display: flex;
   gap: var(--spacing-xl);
-  animation: scroll-infinite 50s linear infinite;
   width: fit-content;
   align-items: center;
+  animation: scroll-infinite 90s linear infinite;
 }
 
-.clients-scroll-track:hover {
+.clients-scroll-track.paused {
   animation-play-state: paused;
 }
 
@@ -1554,7 +1593,7 @@ html.light-theme .clients-scroll-container::after {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translateX(calc(-100% / 3));
   }
 }
 
@@ -1594,6 +1633,43 @@ html.light-theme .clients-scroll-container::after {
 
 .logo-placeholder img {
   border-radius: var(--radius-md);
+}
+
+/* Responsive carousel navigation */
+@media (max-width: 768px) {
+  .carousel-nav {
+    width: 40px;
+    height: 40px;
+  }
+
+  .carousel-nav i {
+    font-size: 1rem;
+  }
+
+  .logo-placeholder {
+    height: 140px;
+    width: 140px;
+  }
+
+  .clients-carousel-wrapper {
+    gap: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .carousel-nav {
+    width: 35px;
+    height: 35px;
+  }
+
+  .carousel-nav i {
+    font-size: 0.875rem;
+  }
+
+  .logo-placeholder {
+    height: 120px;
+    width: 120px;
+  }
 }
 
 /* ===== PROJECTS SECTION ===== */
