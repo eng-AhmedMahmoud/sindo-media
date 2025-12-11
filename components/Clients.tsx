@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect, useRef } from 'react'
 
 interface ClientsProps {
   language: 'ar' | 'en'
@@ -31,10 +32,53 @@ const clients = [
   { image: '/clients/client-11.jpg', name: 'Client 11' },
   { image: '/clients/client-12.jpg', name: 'Client 12' },
   { image: '/clients/client-13.jpg', name: 'Client 13' },
+  { image: '/clients/foodbox.png', name: 'FoodBox' },
+  { image: '/clients/rumana.png', name: 'Rumana' },
 ]
 
 export default function Clients({ language }: ClientsProps) {
   const t = translations[language]
+  const containerRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const container = containerRef.current
+    const track = trackRef.current
+    if (!container || !track) return
+
+    const updateCenterLogo = () => {
+      const logos = track.querySelectorAll('.client-logo')
+      const containerRect = container.getBoundingClientRect()
+      const containerCenter = containerRect.left + containerRect.width / 2
+
+      logos.forEach((logo) => {
+        const logoRect = logo.getBoundingClientRect()
+        const logoCenter = logoRect.left + logoRect.width / 2
+        const distance = Math.abs(containerCenter - logoCenter)
+
+        // Highlight logos within 150px of center
+        if (distance < 150) {
+          logo.classList.add('center-logo')
+        } else {
+          logo.classList.remove('center-logo')
+        }
+      })
+    }
+
+    // Update on animation frame for smooth transitions
+    let animationFrameId: number
+    const animate = () => {
+      updateCenterLogo()
+      animationFrameId = requestAnimationFrame(animate)
+    }
+    animate()
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
+    }
+  }, [])
 
   return (
     <section id="clients" className="clients">
@@ -44,23 +88,41 @@ export default function Clients({ language }: ClientsProps) {
           <p className="section-description">{t.description}</p>
         </div>
 
-        <div className="clients-logos">
-          {clients.map((client, index) => (
-            <div
-              key={index}
-              className="client-logo"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className="logo-placeholder">
-                <Image
-                  src={client.image}
-                  alt={client.name}
-                  fill
-                  style={{ objectFit: 'contain' }}
-                />
+        <div className="clients-scroll-container" ref={containerRef}>
+          <div className="clients-scroll-track" ref={trackRef}>
+            {/* First set of logos */}
+            {clients.map((client, index) => (
+              <div
+                key={`client-1-${index}`}
+                className="client-logo"
+              >
+                <div className="logo-placeholder">
+                  <Image
+                    src={client.image}
+                    alt={client.name}
+                    fill
+                    style={{ objectFit: 'contain' }}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+            {/* Duplicate set for seamless loop */}
+            {clients.map((client, index) => (
+              <div
+                key={`client-2-${index}`}
+                className="client-logo"
+              >
+                <div className="logo-placeholder">
+                  <Image
+                    src={client.image}
+                    alt={client.name}
+                    fill
+                    style={{ objectFit: 'contain' }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

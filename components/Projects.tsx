@@ -73,6 +73,24 @@ const projects = [
     categoryEn: 'Medical E-learning Platform',
     image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80',
     url: 'https://tabib-academy.vercel.app/'
+  },
+  {
+    id: 7,
+    titleAr: 'مراحل العلاج',
+    titleEn: 'Therapy Stages',
+    categoryAr: 'منصة صحية',
+    categoryEn: 'Healthcare Platform',
+    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80',
+    url: 'https://therapystages-sa.net/'
+  },
+  {
+    id: 8,
+    titleAr: 'بوابة أوبرازي',
+    titleEn: 'Operazi Portal',
+    categoryAr: 'بوابة طبية',
+    categoryEn: 'Medical Portal',
+    image: 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=800&q=80',
+    url: 'https://operaziportal.technoapps.net/ar'
   }
 ]
 
