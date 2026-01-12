@@ -1,8 +1,17 @@
 'use client'
 
+import Image from 'next/image'
+
 interface TeamProps {
   language: 'ar' | 'en'
 }
+
+const teamImages = [
+  '/team/mohamed-ramadan.jpeg',
+  '/team/mostafa-mika.jpeg',
+  '/team/ahmed-khalil.jpeg',
+  '/team/mohab-elhaddad.jpeg'
+]
 
 const translations = {
   ar: {
@@ -46,10 +55,14 @@ export default function Team({ language }: TeamProps) {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="team-image">
-                <div className="team-placeholder">
-                  <i className="fas fa-user"></i>
-                </div>
-                <div className="team-social">
+                <Image
+                  src={teamImages[index]}
+                  alt={member.name}
+                  fill
+                  className="team-photo"
+                  style={{ objectFit: 'cover' }}
+                />
+{/* <div className="team-social">
                   <a href="#" className="social-link" aria-label="LinkedIn">
                     <i className="fab fa-linkedin"></i>
                   </a>
@@ -59,7 +72,7 @@ export default function Team({ language }: TeamProps) {
                   <a href="#" className="social-link" aria-label="Instagram">
                     <i className="fab fa-instagram"></i>
                   </a>
-                </div>
+                </div> */}
               </div>
               <div className="team-info">
                 <h3 className="team-name">{member.name}</h3>
