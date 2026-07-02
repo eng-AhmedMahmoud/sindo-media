@@ -23,17 +23,19 @@ const clients = [
   { image: '/clients/client-2.jpg', name: 'Client 2' },
   { image: '/clients/client-3.jpg', name: 'Client 3' },
   { image: '/clients/client-4.jpg', name: 'Client 4' },
-  { image: '/clients/client-5.jpg', name: 'Client 5' },
   { image: '/clients/client-6.jpg', name: 'Client 6' },
   { image: '/clients/client-7.jpg', name: 'Client 7' },
   { image: '/clients/client-8.jpg', name: 'Client 8' },
   { image: '/clients/client-9.jpg', name: 'Client 9' },
   { image: '/clients/client-10.jpg', name: 'Client 10' },
   { image: '/clients/client-11.jpg', name: 'Client 11' },
-  { image: '/clients/client-12.jpg', name: 'Client 12' },
-  { image: '/clients/client-13.jpg', name: 'Client 13' },
+  { image: '/clients/client-14.jpg', name: 'Client 14' },
+  { image: '/clients/client-15.jpg', name: 'Client 15' },
+  { image: '/clients/client-16.jpg', name: 'Client 16' },
+  { image: '/clients/client-17.jpg', name: 'Client 17' },
+  { image: '/clients/client-18.jpg', name: 'Client 18' },
+  { image: '/clients/client-19.jpg', name: 'Client 19' },
   { image: '/clients/foodbox.png', name: 'FoodBox' },
-  { image: '/clients/rumana.png', name: 'Rumana' },
 ]
 
 export default function Clients({ language }: ClientsProps) {
