@@ -12,6 +12,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.error('SMTP credentials missing: set SMTP_USER and SMTP_PASSWORD env vars')
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 500 }
+      )
+    }
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
@@ -22,8 +30,13 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    const fromAddress = process.env.SMTP_FROM
+      ? `"Sindo Media" <${process.env.SMTP_FROM}>`
+      : `"Sindo Media" <${process.env.SMTP_USER}>`
+
     const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: fromAddress,
+      sender: process.env.SMTP_USER,
       to: ['contact@sindo-media.agency', 'ahmedkhalil9798@gmail.com'],
       replyTo: email,
       subject: `New Contact Form Submission from ${name}`,
@@ -44,13 +57,15 @@ ${project}
       `,
     }
 
-    await transporter.sendMail(mailOptions)
+    const info = await transporter.sendMail(mailOptions)
+    console.log('Contact email sent:', info.messageId, 'accepted:', info.accepted, 'rejected:', info.rejected)
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error sending email:', error)
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('Error sending contact email:', message, error)
     return NextResponse.json(
-      { error: 'Failed to send email' },
+      { error: 'Failed to send email', detail: message },
       { status: 500 }
     )
   }
