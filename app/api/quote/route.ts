@@ -3,9 +3,9 @@ import nodemailer from 'nodemailer'
 
 export async function POST(request: NextRequest) {
   try {
-    const { fullName, phoneNumber, countryCode, companyName, service, requirement } = await request.json()
+    const { fullName, email, phoneNumber, countryCode, companyName, service, requirement } = await request.json()
 
-    if (!fullName || !phoneNumber || !service) {
+    if (!fullName || !email || !phoneNumber || !service) {
       return NextResponse.json(
         { error: 'Required fields are missing' },
         { status: 400 }
@@ -38,10 +38,12 @@ export async function POST(request: NextRequest) {
       from: fromAddress,
       sender: process.env.SMTP_USER,
       to: ['contact@sindo-media.agency', 'ahmedkhalil9798@gmail.com'],
+      replyTo: email,
       subject: `New Quote Request from ${fullName}`,
       html: `
         <h2>New Quote Request</h2>
         <p><strong>Full Name:</strong> ${fullName}</p>
+        <p><strong>Email:</strong> ${email}</p>
         <p><strong>Phone Number:</strong> ${countryCode || ''} ${phoneNumber}</p>
         <p><strong>Company Name:</strong> ${companyName || 'Not provided'}</p>
         <p><strong>Service Requested:</strong> ${service}</p>
@@ -52,6 +54,7 @@ export async function POST(request: NextRequest) {
 New Quote Request
 
 Full Name: ${fullName}
+Email: ${email}
 Phone Number: ${countryCode || ''} ${phoneNumber}
 Company Name: ${companyName || 'Not provided'}
 Service Requested: ${service}

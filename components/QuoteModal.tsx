@@ -15,6 +15,7 @@ const translations = {
     subtitle: 'حقق أرباح أفضل بنفس الميزانية أو أقل',
     description: 'أنت في أمان، فريقنا جاهز دائماً للإجابة على استفساراتكم، اتصل بنا في اي وقت باستخدام إحدى وسائل الاتصال المتوفرة.',
     fullName: 'الاسم',
+    email: 'البريد الإلكتروني',
     phoneNumber: 'رقم الموبايل',
     phoneLabel: 'رقم التليفون بكود الدولة',
     companyName: 'اسم الشركة أو النشاط',
@@ -37,6 +38,7 @@ const translations = {
     subtitle: 'Achieve better profits within the same budget or less.',
     description: 'You are in safe hands; our team is always ready to answer your inquiries. Contact us anytime using one of the available communication methods.',
     fullName: 'Full Name',
+    email: 'Email',
     phoneNumber: 'Phone Number',
     phoneLabel: 'Phone Number with country code',
     companyName: 'Company Name',
@@ -60,6 +62,7 @@ export default function QuoteModal({ language, isOpen, onClose, addToast }: Quot
   const t = translations[language]
   const [formData, setFormData] = useState({
     fullName: '',
+    email: '',
     phoneNumber: '',
     countryCode: '+966',
     companyName: '',
@@ -99,6 +102,7 @@ export default function QuoteModal({ language, isOpen, onClose, addToast }: Quot
         addToast('success', language === 'ar' ? 'تم إرسال طلبك بنجاح!' : 'Your request has been sent successfully!')
         setFormData({
           fullName: '',
+          email: '',
           phoneNumber: '',
           countryCode: '+966',
           companyName: '',
@@ -146,6 +150,18 @@ export default function QuoteModal({ language, isOpen, onClose, addToast }: Quot
               className="quote-form-input"
               placeholder={t.fullName}
               value={formData.fullName}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="quote-form-group">
+            <input
+              type="email"
+              name="email"
+              className="quote-form-input"
+              placeholder={t.email}
+              value={formData.email}
               onChange={handleChange}
               required
             />
