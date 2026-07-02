@@ -117,7 +117,7 @@ export default function Contact({ language, addToast }: ContactProps) {
               <a href="https://www.facebook.com/profile.php?id=61583397677984" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Facebook">
                 <i className="fab fa-facebook"></i>
               </a>
-              <a href="https://www.instagram.com/media_sindo70/" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Instagram">
+              <a href="https://www.instagram.com/sindo_media_agency/?hl=ar" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Instagram">
                 <i className="fab fa-instagram"></i>
               </a>
               <a href="https://www.tiktok.com/@sindomediaagency" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="TikTok">
