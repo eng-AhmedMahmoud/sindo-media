@@ -35,7 +35,6 @@ const clients = [
   { image: '/clients/client-17.jpg', name: 'Client 17' },
   { image: '/clients/client-18.jpg', name: 'Client 18' },
   { image: '/clients/client-19.jpg', name: 'Client 19' },
-  { image: '/clients/foodbox.png', name: 'FoodBox' },
 ]
 
 export default function Clients({ language }: ClientsProps) {
