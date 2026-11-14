@@ -6,6 +6,9 @@ services:
     image: node:24.22.1-alpine
     container_name: sindo-media
     restart: unless-stopped
+    # Docker's default bridge: the VPS has no address pools left for a
+    # per-project network. Ports stay 127.0.0.1-bound; outbound works.
+    network_mode: bridge
     user: "1000:1000"             # node
     working_dir: /app
     command: ["node", "server.js"]
