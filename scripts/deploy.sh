@@ -28,7 +28,7 @@ BUILD_PUBLIC_KEYS=()                 # NEXT_PUBLIC_* inlined at build time, read
 BUILD_ENV=()                         # extra build-only variables (KEY=value)
 INSTALL=(npm ci --no-audit --no-fund)
 BUILD=(npm run build)
-PLATFORM="linuxmusl-x64"             # node:24.22.1-alpine on an x86-64 VPS
+NPM_TARGET=(--os=linux --cpu=x64 --libc=musl)  # node:24.22.1-alpine on an x86-64 VPS
 
 HOST="${DEPLOY_HOST:-root@72.61.81.59}"
 REF="${DEPLOY_REF:-origin/main}"
@@ -75,7 +75,8 @@ wait_for_mac() {
   printf 'REQUIRED_KEYS=(%s)\n' "${REQUIRED_KEYS[*]:-}"
   printf 'BUILD_PUBLIC_KEYS=(%s)\n' "${BUILD_PUBLIC_KEYS[*]:-}"
   cat <<'REMOTE'
-set -euo pipefail
+set -Eeuo pipefail
+trap 'echo "✗ remote step failed (line $LINENO): $BASH_COMMAND" >&2' ERR
 value() { sed -n "s/^$1=//p" "$ENV_FILE" | tail -1 | sed -E "s/^'(.*)'\$/\\1/; s/^\"(.*)\"\$/\\1/"; }
 
 preflight() {  # read-only: what the Mac build and the start need from ENV_FILE
@@ -111,7 +112,7 @@ ship() {
   rm -rf "$in"
   # Keep the three newest releases plus whatever current/previous point at.
   local keep r
-  keep="$(readlink "$APP_DIR/current" 2>/dev/null) $(readlink "$APP_DIR/previous" 2>/dev/null)"
+  keep="$(readlink "$APP_DIR/current" 2>/dev/null || true) $(readlink "$APP_DIR/previous" 2>/dev/null || true)"
   for r in $(ls -1t "$APP_DIR/releases" | tail -n +4); do
     [[ " $keep " == *" releases/$r "* ]] || rm -rf "$APP_DIR/releases/$r"
   done
@@ -218,30 +219,27 @@ if [ "$MODE" != rollback ]; then
   cp "$S/docker-compose.prod.yml" "$R/"
   cp "$S/deploy/nginx.conf" "$R/deploy/"
 
-  # sharp (Next.js image optimizer) ships per-platform binaries as optional
-  # dependencies; the Mac install only has the darwin ones. Fetch the
-  # $PLATFORM pair at the exact versions sharp pins and drop the darwin ones.
-  mkdir -p "$WORK/pack"
+  # Native modules: every copy of sharp in the standalone tree (Next.js ships
+  # its own nested one) gets its sibling @img dir replaced by the Linux x86-64
+  # musl build of the same version, to match node:alpine. Leftover macOS
+  # builds (pnpm keeps them under .pnpm) are dropped, and nothing that is not
+  # an ELF x86-64 binary may ship.
   while IFS= read -r pkg; do
-    for spec in $(node -e '
-      const p = require(process.argv[1]), plat = process.argv[2];
-      for (const [n, v] of Object.entries(p.optionalDependencies || {}))
-        if (n === "@img/sharp-" + plat || n === "@img/sharp-libvips-" + plat) console.log(n + "@" + v);
-    ' "$pkg" "$PLATFORM"); do
-      name="${spec%@*}"
-      [ -e "$R/app/node_modules/$name" ] && continue
-      file="$(cd "$WORK/pack" && npm pack --silent "$spec" | tail -1)"
-      mkdir -p "$R/app/node_modules/$name"
-      tar -xzf "$WORK/pack/$file" -C "$R/app/node_modules/$name" --strip-components=1
-      echo "· added $spec"
-    done
-  done < <(find "$R/app/node_modules" -path '*/node_modules/sharp/package.json' 2>/dev/null)
-  find "$R/app/node_modules" -name 'sharp-*darwin*' -prune -exec rm -rf {} + 2>/dev/null || true
-  bad="$(find "$R/app" -name '*.node' -not -path "*/@img/sharp-$PLATFORM/*" | sed "s#^$R/app/##")"
-  if [ -n "$bad" ]; then echo "✗ native modules built for macOS in the release:" >&2; echo "$bad" >&2; exit 1; fi
-  for f in $(find "$R/app" -name '*.node'); do
-    file -b "$f" | grep -q 'ELF 64-bit.*x86-64' || { echo "✗ $f is not a Linux x86-64 binary" >&2; exit 1; }
-  done
+    modules="$(dirname "$(dirname "$pkg")")"
+    version="$(node -p "require(process.argv[1]).version" "$pkg")"
+    natives="$WORK/natives/$version"
+    if [ ! -d "$natives/node_modules/@img" ]; then
+      mkdir -p "$natives"
+      npm install --prefix "$natives" --no-save --no-audit --no-fund \
+        "${NPM_TARGET[@]}" "sharp@$version" >/dev/null
+    fi
+    rm -rf "$modules/@img" && mkdir -p "$modules/@img"
+    cp -R "$natives/node_modules/@img/." "$modules/@img/"
+    echo "· sharp $version: Linux natives in ${modules#"$R/app/"}"
+  done < <(find "$R/app" -path '*/node_modules/sharp/package.json')
+  find "$R/app" -name 'sharp-*darwin*' -prune -exec rm -rf {} + 2>/dev/null || true
+  bad="$(find "$R/app" -name '*.node' -exec file {} + | grep -v 'ELF 64-bit LSB.*x86-64' || true)"
+  [ -z "$bad" ] || { echo "✗ non-Linux native modules in the release:" >&2; echo "$bad" >&2; exit 1; }
 
   COPYFILE_DISABLE=1 tar --no-xattrs --no-mac-metadata -czf "$WORK/release.tgz" -C "$R" .
   echo "→ shipping $SHA ($(du -h "$WORK/release.tgz" | cut -f1)) to $HOST:$APP_DIR"
