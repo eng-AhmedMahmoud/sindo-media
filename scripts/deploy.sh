@@ -3,7 +3,8 @@
 # 2026-11-13 account pause). The VPS never builds: this script builds the
 # Next.js standalone server on this Mac from a clean export of origin/main,
 # swaps in Linux x86-64 native binaries, and ships only that built tree over
-# SSH. On the VPS a stock node image runs it (docker-compose.prod.yml has no
+# SSH into /home/devya/projects/<app>/releases/<sha>, with a `current` symlink.
+# A stock node image runs `current` read-only (docker-compose.prod.yml has no
 # build step) behind nginx.
 #
 #   bash scripts/deploy.sh             # build origin/main here, ship it, restart the container
@@ -11,7 +12,7 @@
 #   bash scripts/deploy.sh --rollback  # put the previous release back and restart it
 #
 # Env: DEPLOY_HOST (default root@72.61.81.59), DEPLOY_REF (default origin/main),
-# DEPLOY_NO_LOCK=1 skips the Mac load check and the shared heavy-job lock.
+# DEPLOY_NO_LOCK=1 skips the Mac load check and the shared build lock.
 # Runtime config lives in ENV_FILE on the VPS (chmod 600, never in git); the
 # deploy refuses to start the container while a REQUIRED_KEYS entry is empty.
 set -euo pipefail
@@ -34,7 +35,7 @@ REF="${DEPLOY_REF:-origin/main}"
 VPS_IP="72.61.81.59"
 APP_DIR="/home/devya/projects/$APP"
 ENV_FILE="/home/devya/projects/$APP.env"
-LOCK="$HOME/Projects/_wt/.heavy-lock"
+LOCK="/tmp/vx-mac-build.lock"         # shared by every agent building on this Mac
 
 MODE="deploy"
 case "${1:-}" in
@@ -54,20 +55,15 @@ release_mac() { if [ "$HAVE_LOCK" = 1 ]; then rmdir "$LOCK" 2>/dev/null || true;
 trap 'release_mac; rm -rf "$WORK"' EXIT
 SSH=(ssh -o ServerAliveInterval=15 -o ServerAliveCountMax=8 "$HOST")
 
-# One heavy job at a time on this Mac: wait for the 1-min load to drop below
-# 15, then take the lock other sessions share (stale after 20 minutes).
+# One heavy job at a time on this Mac across all sessions: wait for the 1-min
+# load to drop below 15, then take the shared build lock (released on exit).
 wait_for_mac() {
   [ "${DEPLOY_NO_LOCK:-}" = 1 ] && return 0
   while [ "$(sysctl -n vm.loadavg 2>/dev/null | awk '{print int($2)}')" -ge 15 ] 2>/dev/null; do
     echo "· waiting for the Mac's load to drop below 15"; sleep 20
   done
-  if [ -d "$(dirname "$LOCK")" ]; then
-    until mkdir "$LOCK" 2>/dev/null; do
-      if [ -n "$(find "$LOCK" -maxdepth 0 -mmin +20 2>/dev/null)" ]; then rmdir "$LOCK" 2>/dev/null || true; fi
-      sleep 15
-    done
-    HAVE_LOCK=1
-  fi
+  until mkdir "$LOCK" 2>/dev/null; do echo "· waiting for $LOCK"; sleep 20; done
+  HAVE_LOCK=1
 }
 
 # The remote half runs from a file with stdin closed (a `bash -s` heredoc can be
@@ -89,14 +85,36 @@ preflight() {  # read-only: what the Mac build and the start need from ENV_FILE
   for k in "${BUILD_PUBLIC_KEYS[@]}"; do echo "PUBLIC $k=$(value "$k")"; done
 }
 
+# Layout: $APP_DIR/{docker-compose.prod.yml, nginx.conf, current -> releases/<sha>,
+# previous -> releases/<sha>, releases/<sha>/ (the standalone server)}.
+point() {  # point <link> <target>: atomic symlink swap
+  ln -sfn "$2" "$APP_DIR/.$1.new" && mv -Tf "$APP_DIR/.$1.new" "$APP_DIR/$1"
+}
+
 ship() {
-  rm -rf "$APP_DIR.next" && mkdir -p "$APP_DIR.next"
-  tar --no-same-owner -xzf "/tmp/$APP-$SHA.tgz" -C "$APP_DIR.next"
+  local in="$APP_DIR/releases/.incoming-$SHA" cur=""
+  mkdir -p "$APP_DIR/releases"
+  rm -rf "$in" && mkdir -p "$in"
+  tar --no-same-owner -xzf "/tmp/$APP-$SHA.tgz" -C "$in"
   rm -f "/tmp/$APP-$SHA.tgz"
-  chown -R 1000:1000 "$APP_DIR.next/app"   # the container runs as node (1000)
-  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $SHA" > "$APP_DIR.next/.deployed-commit"
-  if [ -d "$APP_DIR" ]; then rm -rf "$APP_DIR.prev" && mv "$APP_DIR" "$APP_DIR.prev"; fi
-  mv "$APP_DIR.next" "$APP_DIR"
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $SHA" > "$in/app/.deployed-commit"
+  cp "$in/docker-compose.prod.yml" "$APP_DIR/docker-compose.prod.yml"
+  cp "$in/deploy/nginx.conf" "$APP_DIR/nginx.conf"
+  [ -L "$APP_DIR/current" ] && cur="$(readlink "$APP_DIR/current")"
+  if [ "$cur" = "releases/$SHA" ]; then
+    echo "releases/$SHA is already current; restarting it"
+  else
+    rm -rf "$APP_DIR/releases/$SHA" && mv "$in/app" "$APP_DIR/releases/$SHA"
+    [ -n "$cur" ] && point previous "$cur"
+    point current "releases/$SHA"
+  fi
+  rm -rf "$in"
+  # Keep the three newest releases plus whatever current/previous point at.
+  local keep r
+  keep="$(readlink "$APP_DIR/current" 2>/dev/null) $(readlink "$APP_DIR/previous" 2>/dev/null)"
+  for r in $(ls -1t "$APP_DIR/releases" | tail -n +4); do
+    [[ " $keep " == *" releases/$r "* ]] || rm -rf "$APP_DIR/releases/$r"
+  done
 }
 
 start() {
@@ -122,7 +140,7 @@ start() {
 # place, so later deploys never overwrite it. Change it on the box, not here.
 nginx_site() {  # stage | enable
   local site="/etc/nginx/sites-available/$APP" link="/etc/nginx/sites-enabled/$APP"
-  if [ ! -e "$site" ]; then cp "$APP_DIR/deploy/nginx.conf" "$site"; echo "nginx: installed $site"; fi
+  if [ ! -e "$site" ]; then cp "$APP_DIR/nginx.conf" "$site"; echo "nginx: installed $site"; fi
   [ "$1" = enable ] || { echo "nginx: $site staged (not enabled)"; return 0; }
   if [ ! -e "$link" ]; then
     ln -s "$site" "$link"
@@ -150,9 +168,11 @@ case "${1:?action}" in
     nginx_site stage
     ;;
   rollback)
-    [ -d "$APP_DIR.prev" ] || { echo "✗ no previous release at $APP_DIR.prev" >&2; exit 1; }
-    rm -rf "$APP_DIR.failed" && mv "$APP_DIR" "$APP_DIR.failed" && mv "$APP_DIR.prev" "$APP_DIR"
-    echo "rolled back to $(cat "$APP_DIR/.deployed-commit" 2>/dev/null || echo unknown)"
+    prev="$(readlink "$APP_DIR/previous" 2>/dev/null || true)"
+    [ -n "$prev" ] && [ -d "$APP_DIR/$prev" ] || { echo "✗ no previous release" >&2; exit 1; }
+    cur="$(readlink "$APP_DIR/current")"
+    point current "$prev" && point previous "$cur"
+    echo "rolled back to $prev ($(cat "$APP_DIR/$prev/.deployed-commit" 2>/dev/null || echo unknown))"
     start
     ;;
 esac
@@ -192,6 +212,7 @@ if [ "$MODE" != rollback ]; then
   [ -f "$S/.next/standalone/server.js" ] || { echo "✗ no .next/standalone/server.js (next.config needs output: 'standalone')" >&2; exit 1; }
   mkdir -p "$R/app/.next" "$R/deploy"
   cp -a "$S/.next/standalone/." "$R/app/"
+  mkdir -p "$R/app/.next/cache"   # mount point for the container's writable tmpfs
   cp -a "$S/.next/static" "$R/app/.next/static"
   if [ -d "$S/public" ]; then cp -a "$S/public" "$R/app/public"; fi
   cp "$S/docker-compose.prod.yml" "$R/"

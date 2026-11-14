@@ -74,7 +74,8 @@ npm start
 Production runs on the Devya VPS (`72.61.81.59`), not Vercel (the Vercel team
 was paused on 2026-11-13). The VPS never builds: `scripts/deploy.sh` builds the
 Next.js standalone server on the Mac from a clean export of `origin/main`,
-swaps in Linux x86-64 native binaries (sharp), and ships only that tree. A
+swaps in Linux x86-64 native binaries (sharp), and ships only that tree to `releases/<sha>` on the VPS (a `current` symlink
+marks the live one, mounted read-only). A
 stock `node:24.22.1-alpine` container (`docker-compose.prod.yml`, no build
 step) runs it on `127.0.0.1:3192`, and nginx (`deploy/nginx.conf`) serves
 `www.sindo-media.agency`. The apex `sindo-media.agency` answers 301 to the www
