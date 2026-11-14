@@ -72,24 +72,26 @@ npm start
 ## Hosting
 
 Production runs on the Devya VPS (`72.61.81.59`), not Vercel (the Vercel team
-was paused on 2026-11-13). A Docker container (`Dockerfile`,
-`docker-compose.prod.yml`, Next.js standalone) listens on `127.0.0.1:3192`, and
-nginx (`deploy/nginx.conf`) serves `www.sindo-media.agency`. The apex
-`sindo-media.agency` answers 301 to the www host (`apex-redirect` on the VPS),
-as it did on Vercel. TLS certificates are issued by `pending-certs` once DNS
-points at the VPS.
+was paused on 2026-11-13). The VPS never builds: `scripts/deploy.sh` builds the
+Next.js standalone server on the Mac from a clean export of `origin/main`,
+swaps in Linux x86-64 native binaries (sharp), and ships only that tree. A
+stock `node:24.22.1-alpine` container (`docker-compose.prod.yml`, no build
+step) runs it on `127.0.0.1:3192`, and nginx (`deploy/nginx.conf`) serves
+`www.sindo-media.agency`. The apex `sindo-media.agency` answers 301 to the www
+host (`apex-redirect` on the VPS), as it did on Vercel. TLS certificates are
+issued by `pending-certs` once DNS points at the VPS.
 
 - Gate: Jenkins (`Jenkinsfile`) runs `bash scripts/ci-local.sh` on every PR;
   run it locally when Jenkins is down or busy.
-- Deploy from merged `main`: `bash scripts/deploy.sh` (ships `origin/main` over
-  SSH, builds under the shared build lock, checks the title and the public
+- Deploy from merged `main`: `bash scripts/deploy.sh` (builds here, ships the
+  release over SSH, restarts the container, checks the title and the public
   hosts). `bash scripts/deploy.sh --rollback` puts the previous release back.
 - Runtime config: `/home/devya/projects/sindo-media.env` on the VPS (chmod 600,
   never committed) holds `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`,
   `SMTP_PASSWORD`, `SMTP_FROM`. Without `SMTP_USER`/`SMTP_PASSWORD` the contact
   and quote forms answer `500 {"error":"Email service not configured"}` and the
   rest of the site works. After editing it, recreate the container:
-  `ssh root@72.61.81.59 'cd /home/devya/projects/sindo-media && docker compose --env-file ../sindo-media.env -f docker-compose.prod.yml up -d --force-recreate'`.
+  `ssh root@72.61.81.59 'cd /home/devya/projects/sindo-media && docker compose -f docker-compose.prod.yml up -d --force-recreate'`.
 
 ## Customization
 

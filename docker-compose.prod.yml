@@ -1,16 +1,26 @@
 services:
   sindo-media:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: sindo-media:latest
+    # Stock Node image and no build on the VPS: scripts/deploy.sh builds the
+    # Next.js standalone server on the Mac (Linux x86-64 native binaries) and
+    # ships it into ./app next to this file.
+    image: node:24.22.1-alpine
     container_name: sindo-media
     restart: unless-stopped
+    user: "1000:1000"             # node; scripts/deploy.sh chowns ./app to it
+    working_dir: /app
+    command: ["node", "server.js"]
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
     # SMTP_* for the contact and quote forms. Outside the release directory,
     # which scripts/deploy.sh replaces: the values never travel with a release.
     env_file:
       - path: /home/devya/projects/sindo-media.env
         required: false
+    volumes:
+      - ./app:/app
     ports:
       # Loopback-only: nginx reverse-proxies to localhost:3192. Without the
       # 127.0.0.1 prefix Docker publishes on 0.0.0.0, which ufw does not filter.
