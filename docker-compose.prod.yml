@@ -1,0 +1,29 @@
+services:
+  sindo-media:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sindo-media:latest
+    container_name: sindo-media
+    restart: unless-stopped
+    # SMTP_* for the contact and quote forms. Outside the release directory,
+    # which scripts/deploy.sh replaces: the values never travel with a release.
+    env_file:
+      - path: /home/devya/projects/sindo-media.env
+        required: false
+    ports:
+      # Loopback-only: nginx reverse-proxies to localhost:3192. Without the
+      # 127.0.0.1 prefix Docker publishes on 0.0.0.0, which ufw does not filter.
+      - "127.0.0.1:3192:3000"
+    mem_limit: 384m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
