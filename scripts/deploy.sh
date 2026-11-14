@@ -49,7 +49,10 @@ cd "$(git rev-parse --show-toplevel)"
 git fetch origin --quiet
 SHA="$(git rev-parse --short "$REF")"
 
-WORK="$(mktemp -d -t "$APP-deploy")"
+# Physical path: on macOS the temp dir sits behind the /var -> /private/var
+# symlink, and Turbopack's next/font/google loader fails to resolve its font
+# files from a symlinked project root.
+WORK="$(cd "$(mktemp -d -t "$APP-deploy")" && pwd -P)"
 HAVE_LOCK=0
 release_mac() { if [ "$HAVE_LOCK" = 1 ]; then rmdir "$LOCK" 2>/dev/null || true; HAVE_LOCK=0; fi; }
 trap 'release_mac; rm -rf "$WORK"' EXIT
