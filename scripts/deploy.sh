@@ -137,6 +137,19 @@ start() {
     echo "✗ the release is not serving; roll back with: bash scripts/deploy.sh --rollback" >&2
     return 1
   fi
+  # A 200 page is not a working page: every /_next/static asset it references must
+  # load too (a nested static copy left devya.dev on its splash screen, 2026-11-15).
+  local asset missing=0 total=0
+  for asset in $(curl -s -m 10 "http://127.0.0.1:$PORT$CHECK_PATH" | grep -oE '(src|href)="/_next/static/[^"]+' | cut -d'"' -f2 | sort -u); do
+    total=$((total + 1))
+    code="$(curl -s -o /dev/null -m 10 -w '%{http_code}' "http://127.0.0.1:$PORT$asset" || true)"
+    [ "$code" = 200 ] || { echo "✗ $asset → $code" >&2; missing=$((missing + 1)); }
+  done
+  echo "$CHECK_PATH references $total static assets, $missing missing"
+  if [ "$total" = 0 ] || [ "$missing" != 0 ]; then
+    echo "✗ the release is missing static assets; roll back with: bash scripts/deploy.sh --rollback" >&2
+    return 1
+  fi
 }
 
 # nginx: the site file is installed once (HTTP only); pending-certs issues the
@@ -217,8 +230,15 @@ if [ "$MODE" != rollback ]; then
   mkdir -p "$R/app/.next" "$R/deploy"
   cp -a "$S/.next/standalone/." "$R/app/"
   mkdir -p "$R/app/.next/cache"   # mount point for the container's writable tmpfs
-  cp -a "$S/.next/static" "$R/app/.next/static"
-  if [ -d "$S/public" ]; then cp -a "$S/public" "$R/app/public"; fi
+  # Copy contents, not directories: the standalone tree can already hold a partial
+  # .next/static, and copying the directory onto it nests everything in .next/static/static,
+  # so every page's JS 404s (the devya.dev splash outage, 2026-11-15).
+  mkdir -p "$R/app/.next/static"
+  cp -a "$S/.next/static/." "$R/app/.next/static/"
+  if [ -d "$S/public" ]; then mkdir -p "$R/app/public"; cp -a "$S/public/." "$R/app/public/"; fi
+  if [ -e "$R/app/.next/static/static" ] || [ -e "$R/app/public/public" ]; then
+    echo "✗ static or public copied into a nested directory" >&2; exit 1
+  fi
   cp "$S/docker-compose.prod.yml" "$R/"
   cp "$S/deploy/nginx.conf" "$R/deploy/"
 
