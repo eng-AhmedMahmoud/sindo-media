@@ -54,7 +54,7 @@ const projects = [
     categoryAr: 'صيانة الأجهزة الكهربائية',
     categoryEn: 'Electric Devices Maintenance',
     image: 'https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=800&q=80',
-    url: 'https://syanasupport.vercel.app/'
+    url: 'https://syanasupport.devya.dev/'
   },
   {
     id: 5,
@@ -63,7 +63,7 @@ const projects = [
     categoryAr: 'مقهى قهوة',
     categoryEn: 'Coffee Shop',
     image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80',
-    url: 'https://drinki.vercel.app/'
+    url: 'https://drinki.pages.dev/'
   },
   {
     id: 6,
@@ -72,7 +72,7 @@ const projects = [
     categoryAr: 'منصة تعليم طبي إلكتروني',
     categoryEn: 'Medical E-learning Platform',
     image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80',
-    url: 'https://tabib-academy.vercel.app/'
+    url: 'https://tabibacademy.com/'
   },
   {
     id: 7,
